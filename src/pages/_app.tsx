@@ -13,7 +13,6 @@ function MyApp({ Component, pageProps }) {
         <main>
           <Header />
           <Component {...pageProps} />
-
         </main>
         <Player />
 
