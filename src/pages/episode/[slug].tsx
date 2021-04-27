@@ -15,7 +15,7 @@ type Episode = {
   members: string;
   duration: number;
   durationAsString: string;
-  published_at: string;
+  publishedAt: string,
   url: string;
   description: string;
 };
@@ -60,23 +60,39 @@ export default function Episode({ episode }: EpisodeProps){
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  return{
-    paths:[],
-    fallback: 'blocking',
+  const { data } = await api.get('episodes', { 
+    params: {
+      _limit: 2,
+      _sort: 'published_at',
+      _order: 'desc'
+    }
+  })
+
+  const paths = data.map(episode =>{
+    return{
+      params: {
+        slug: episode.id
+      }
+    }
+  })
+
+  return { 
+    paths,
+    fallback: 'blocking'
   }
 }
 
 export const getStaticProps: GetStaticProps = async (ctx) => {
   const { slug } = ctx.params;
   
-  const { data } = await api.get(`http://localhost:3333/episodes/${slug}`);
+  const { data } = await api.get(`episodes/${slug}`);
 
   const episode = {
     id: data.id,
     title: data.title,
     thumbnail: data.thumbnail,
     members: data.members,
-    published_at: format(parseISO(data.published_at), 'd MM yy', {locale: ptBR}),
+    publishedAt: format(parseISO(data.published_at), 'd MM yy', {locale: ptBR}),
     duration: Number(data.file.duration),
     durationAsString: convertDurationToTimeString(Number(data.file.duration)),
     description: data.description,

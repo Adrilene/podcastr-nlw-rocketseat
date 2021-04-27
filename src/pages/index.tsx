@@ -1,10 +1,13 @@
 import { GetStaticProps } from 'next';
+import { useContext } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { format, parseISO} from 'date-fns';
-import { ptBR } from 'date-fns/locale/pt-BR';
+import ptBR from 'date-fns/locale/pt-BR';
+
 import { api } from '../services/api';
 import { convertDurationToTimeString } from '../utils/convert_duration_to_time_string';
+import { PlayerContext } from './contexts/PlayerContext';
 
 import styles from './home.module.scss';
 
@@ -15,7 +18,7 @@ type Episode = {
   members: string;
   duration: number;
   durationAsString: string;
-  published_at: string;
+  publishedAt: string;
   url: string;
 }
 
@@ -25,7 +28,9 @@ type HomeProps = {
 }
 
 export default function Home({latestEpisodes, allEpisodes}: HomeProps){
-	return (
+	const {play} = useContext(PlayerContext)
+  
+  return (
 		<div className={styles.homepage}>
       <section className={styles.latestEpisodes}>
         <h2>Últimos Lançamentos</h2>
@@ -47,11 +52,11 @@ export default function Home({latestEpisodes, allEpisodes}: HomeProps){
                     <a>{episode.title}</a>
                   </Link>
                   <p>{episode.members}</p>
-                  <span>{episode.published_at}</span>
+                  <span>{episode.publishedAt}</span>
                   <span>{episode.durationAsString}</span>
                 </div>
                 
-                <button type="button">
+                <button type="button" onClick={() => play(episode)}>
                   <img src="/play-green.svg" alt="Tocar episódio"/>
                 </button>
               </li>
@@ -60,7 +65,7 @@ export default function Home({latestEpisodes, allEpisodes}: HomeProps){
 
         </ul>
       </section>
-      <div class={styles.allEpisodes}>
+      <div className={styles.allEpisodes}>
         <h2>Todos episódios</h2>
 
         <table cellSpacing={0}>
@@ -92,7 +97,7 @@ export default function Home({latestEpisodes, allEpisodes}: HomeProps){
                   </Link>
                 </td>
                 <td>{episode.members}</td>
-                <td style={{width:100}}>{episode.published_at}</td>
+                <td style={{width:100}}>{episode.publishedAt}</td>
                 <td>{episode.durationAsString}</td>
                 <td>
                   <button type="button">
@@ -110,7 +115,7 @@ export default function Home({latestEpisodes, allEpisodes}: HomeProps){
 }
 
 export const getStaticProps: GetStaticProps = async () => {
-  const { data } = await api.get('http://localhost:3333/episodes', {
+  const { data } = await api.get('episodes', {
     params: {
       _limit: 12,
       _sort: 'published_at',
@@ -124,7 +129,7 @@ export const getStaticProps: GetStaticProps = async () => {
       title: episode.title,
       thumbnail: episode.thumbnail,
       members: episode.members,
-      published_at: format(parseISO(episode.published_at), 'd MM yy', {locale: ptBR}),
+      publishedAt: format(parseISO(episode.published_at), 'd MM yy', {locale: ptBR}),
       duration: Number(episode.file.duration),
       durationAsString: convertDurationToTimeString(Number(episode.file.duration)),
       url: episode.file.url,
